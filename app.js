@@ -79,8 +79,14 @@ function showSection(sectionName) {
 
 // Load all data from API
 async function loadAllData() {
+    // Load apiaries first, then others
+    try {
+        await loadApiaries();
+    } catch (error) {
+        console.error('Failed to load apiaries, continuing with other data...');
+    }
+    
     await Promise.all([
-        loadApiaries(),
         loadHives(),
         loadInspections(),
         loadMetrics(),
@@ -154,13 +160,37 @@ async function loadApiaries() {
         console.log('Starting to load apiaries...');
         const result = await apiCall('get', 'Apiaries');
         console.log('Apiaries API result:', result);
-        apiariesData = result.data || [];
-        console.log('Loaded apiaries:', apiariesData.length);
-        console.log('Apiaries data:', apiariesData);
+        
+        if (result && result.data) {
+            apiariesData = result.data;
+            console.log('Loaded apiaries:', apiariesData.length);
+            console.log('Apiaries data:', apiariesData);
+        } else {
+            console.warn('No apiaries data in response, creating default apiary');
+            // Try to create a default apiary if none exist
+            try {
+                const createResult = await apiCall('add', 'Apiaries', {
+                    Name: 'Main Apiary',
+                    Location: 'Default Location',
+                    Owner_Email: 'beekeeper@example.com',
+                    Created_Date: new Date().toISOString().split('T')[0],
+                    Notes: 'Default apiary created by system'
+                });
+                console.log('Created default apiary result:', createResult);
+                
+                // Reload apiaries after creating default
+                const reloadResult = await apiCall('get', 'Apiaries');
+                apiariesData = reloadResult.data || [];
+                console.log('Reloaded apiaries after creating default:', apiariesData.length);
+            } catch (createError) {
+                console.error('Error creating default apiary:', createError);
+                apiariesData = [];
+            }
+        }
     } catch (error) {
         console.error('Error loading apiaries:', error);
         apiariesData = [];
-        throw error;
+        showAlert('Unable to load apiaries. Please check if the Apiaries sheet exists in your database.', 'warning');
     }
 }
 
@@ -642,8 +672,15 @@ function populateApiarySelects() {
     console.log('Found', selects.length, 'apiary select elements');
     
     selects.forEach(select => {
-        select.innerHTML = '<option value="">Select an apiary...</option>' +
-            apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
+        if (apiariesData.length === 0) {
+            select.innerHTML = `
+                <option value="">No apiaries available</option>
+                <option value="create">Create "Main Apiary" automatically</option>
+            `;
+        } else {
+            select.innerHTML = '<option value="">Select an apiary...</option>' +
+                apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
+        }
         console.log('Populated select with options:', select.innerHTML);
     });
 }
