@@ -441,6 +441,7 @@ function renderTasks() {
 
 // Modal functions
 function showAddHiveModal() {
+    console.log('Opening Add Hive modal');
     const modal = new bootstrap.Modal(document.getElementById('addHiveModal'));
     populateApiarySelects();
     modal.show();
@@ -481,10 +482,14 @@ function populateHiveSelects() {
 
 // Populate apiary selects
 function populateApiarySelects() {
+    console.log('Populating apiary selects with', apiariesData.length, 'apiaries');
     const selects = document.querySelectorAll('select[name="Apiary_ID"]');
+    console.log('Found', selects.length, 'apiary select elements');
+    
     selects.forEach(select => {
         select.innerHTML = '<option value="">Select an apiary...</option>' +
             apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
+        console.log('Populated select with options:', select.innerHTML);
     });
 }
 
