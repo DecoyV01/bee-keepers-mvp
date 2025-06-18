@@ -1,8 +1,28 @@
 // BEE Keepers MVP - Frontend Application
 // Complete JavaScript functionality for beekeeping management system
 
-// Google Apps Script API URL
+// Google Apps Script API URL with cache busting
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_r-9PZ2zpfS-SCr1E61GeCk-qTpuSnZz_4c3VYjKao_F3OiIotb1WaRGO8dC58b7j/exec';
+
+// Clear any problematic cached data on load
+try {
+    if (typeof(Storage) !== "undefined") {
+        // Clear any old cached data that might be causing issues
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('bee') || key.includes('hive') || key.includes('api'))) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Also clear session storage
+        sessionStorage.clear();
+    }
+} catch (e) {
+    console.log('Storage cleanup failed (not available):', e);
+}
 
 // Global data storage
 let apiariesData = [];
@@ -150,7 +170,9 @@ async function apiCall(action, sheet, record = null) {
         // Use JSONP for GET requests to avoid CORS
         return new Promise((resolve, reject) => {
             const callbackName = 'callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            const url = `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}&callback=${callbackName}`;
+            // Add cache busting parameters
+            const cacheBuster = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const url = `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}&callback=${callbackName}&_cb=${cacheBuster}&_t=${Date.now()}`;
             
             console.log('Making JSONP request to:', url);
             
