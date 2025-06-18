@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEE Keepers MVP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fas fa-honeycomb me-2"></i>BEE Keepers MVP</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="showSection('dashboard')" data-section="dashboard">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('hives')" data-section="hives">
+                            <i class="fas fa-archive me-1"></i>Hives
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('inspections')" data-section="inspections">
+                            <i class="fas fa-search me-1"></i>Inspections
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('metrics')" data-section="metrics">
+                            <i class="fas fa-thermometer-half me-1"></i>Metrics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('tasks')" data-section="tasks">
+                            <i class="fas fa-tasks me-1"></i>Tasks
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <button class="btn btn-outline-dark btn-sm" onclick="syncData()" id="syncBtn">
+                            <i class="fas fa-sync-alt me-1"></i>Sync
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <h2><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h2>
+                </div>
+                <div class="col-md-4">
+                    <div class="weather-widget">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Today's Date</h6>
+                                <small id="currentDate"></small>
+                            </div>
+                            <div class="text-end">
+                                <h4 class="mb-0">🌤️</h4>
+                                <small>Perfect for bees!</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card metric-card text-white mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-1">Total Hives</h6>
+                                    <h3 class="mb-0" id="totalHives">0</h3>
+                                </div>
+                                <i class="fas fa-archive fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-1">Active Hives</h6>
+                                    <h3 class="mb-0" id="activeHives">0</h3>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-1">Pending Tasks</h6>
+                                    <h3 class="mb-0" id="pendingTasks">0</h3>
+                                </div>
+                                <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-1">This Month</h6>
+                                    <h3 class="mb-0" id="inspectionsThisMonth">0</h3>
+                                    <small>Inspections</small>
+                                </div>
+                                <i class="fas fa-calendar-check fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Inspections</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="recentInspections" class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading inspections...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Upcoming Tasks</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="upcomingTasks" class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading tasks...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hives Section -->
+        <div id="hives" class="section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-archive me-2"></i>My Hives</h2>
+                <button class="btn btn-primary" onclick="showAddHiveModal()">
+                    <i class="fas fa-plus me-2"></i>Add Hive
+                </button>
+            </div>
+            <div id="hivesGrid" class="row">
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Loading hives...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inspections Section -->
+        <div id="inspections" class="section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-search me-2"></i>Hive Inspections</h2>
+                <button class="btn btn-primary" onclick="showAddInspectionModal()">
+                    <i class="fas fa-plus me-2"></i>New Inspection
+                </button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Hive</th>
+                                    <th>Inspector</th>
+                                    <th>Duration</th>
+                                    <th>Queen Status</th>
+                                    <th>Brood Pattern</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inspectionsTable">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading inspections...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Section -->
+        <div id="metrics" class="section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-thermometer-half me-2"></i>Hive Metrics</h2>
+                <button class="btn btn-primary" onclick="showAddMetricModal()">
+                    <i class="fas fa-plus me-2"></i>Record Metric
+                </button>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Select Hive for Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <select class="form-select" id="metricsHiveSelect" onchange="loadMetricsForHive()">
+                                <option value="">Select a hive...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Latest Readings</h5>
+                        </div>
+                        <div class="card-body" id="latestMetrics">
+                            <p class="text-muted">Select a hive to view metrics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Temperature Trend (7 days)</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="temperatureChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Weight Trend (7 days)</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="weightChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Section -->
+        <div id="tasks" class="section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-tasks me-2"></i>Tasks & Reminders</h2>
+                <button class="btn btn-primary" onclick="showAddTaskModal()">
+                    <i class="fas fa-plus me-2"></i>Add Task
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <h5 class="text-danger">High Priority</h5>
+                    <div id="highPriorityTasks"></div>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="text-warning">Medium Priority</h5>
+                    <div id="mediumPriorityTasks"></div>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="text-success">Low Priority</h5>
+                    <div id="lowPriorityTasks"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Button -->
+    <div class="quick-add">
+        <div class="dropup">
+            <button class="btn btn-warning btn-lg rounded-circle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-plus"></i>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="showAddHiveModal()"><i class="fas fa-archive me-2"></i>Add Hive</a></li>
+                <li><a class="dropdown-item" href="#" onclick="showAddInspectionModal()"><i class="fas fa-search me-2"></i>New Inspection</a></li>
+                <li><a class="dropdown-item" href="#" onclick="showAddMetricModal()"><i class="fas fa-thermometer-half me-2"></i>Record Metric</a></li>
+                <li><a class="dropdown-item" href="#" onclick="showAddTaskModal()"><i class="fas fa-tasks me-2"></i>Add Task</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Hive Modal -->
+    <div class="modal fade" id="addHiveModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-archive me-2"></i>Add New Hive</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addHiveForm">
+                        <div class="mb-3">
+                            <label class="form-label">Hive Name *</label>
+                            <input type="text" class="form-control" name="Name" placeholder="e.g., Hive A1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hive Type</label>
+                            <select class="form-select" name="Type">
+                                <option value="Langstroth">Langstroth</option>
+                                <option value="Top Bar">Top Bar</option>
+                                <option value="Warre">Warre</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Installation Date</label>
+                            <input type="date" class="form-control" name="Install_Date">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="Status">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Swarmed">Swarmed</option>
+                                <option value="Dead">Dead</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="Notes" rows="3" placeholder="Any additional notes about this hive..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addHive()">
+                        <i class="fas fa-save me-2"></i>Add Hive
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Inspection Modal -->
+    <div class="modal fade" id="addInspectionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-search me-2"></i>New Inspection</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addInspectionForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Hive *</label>
+                                    <select class="form-select" name="Hive_ID" id="inspectionHiveSelect" required>
+                                        <option value="">Select a hive...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Inspector *</label>
+                                    <input type="text" class="form-control" name="Inspector" placeholder="Your name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date *</label>
+                                    <input type="date" class="form-control" name="Date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Duration (minutes)</label>
+                                    <input type="number" class="form-control" name="Duration" placeholder="30" min="1">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-4 mb-3 text-primary">Queen Assessment</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Queen Present</label>
+                                    <select class="form-select" name="Queen_Present">
+                                        <option value="Yes">Yes - Seen</option>
+                                        <option value="Eggs">Yes - Eggs Present</option>
+                                        <option value="No">No</option>
+                                        <option value="Unknown">Unknown</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Queen Laying</label>
+                                    <select class="form-select" name="Queen_Laying">
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                        <option value="Unknown">Unknown</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Brood Pattern (1-5)</label>
+                                    <select class="form-select" name="Brood_Pattern">
+                                        <option value="">Not assessed</option>
+                                        <option value="1">1 - Poor (spotty)</option>
+                                        <option value="2">2 - Fair</option>
+                                        <option value="3">3 - Good</option>
+                                        <option value="4">4 - Very Good</option>
+                                        <option value="5">5 - Excellent (solid)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="mt-4 mb-3 text-primary">Colony Resources</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Honey Stores (1-5)</label>
+                                    <select class="form-select" name="Honey_Stores">
+                                        <option value="">Not assessed</option>
+                                        <option value="1">1 - Very Low (emergency)</option>
+                                        <option value="2">2 - Low (feeding needed)</option>
+                                        <option value="3">3 - Adequate</option>
+                                        <option value="4">4 - Good</option>
+                                        <option value="5">5 - Excellent (full)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Weather During Inspection</label>
+                                    <select class="form-select" name="Weather">
+                                        <option value="Sunny">Sunny</option>
+                                        <option value="Partly Cloudy">Partly Cloudy</option>
+                                        <option value="Cloudy">Cloudy</option>
+                                        <option value="Light Rain">Light Rain</option>
+                                        <option value="Windy">Windy</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Inspection Notes</label>
+                            <textarea class="form-control" name="Notes" rows="4" placeholder="Record any observations, concerns, or actions taken..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="addInspection()">
+                        <i class="fas fa-save me-2"></i>Save Inspection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Metric Modal -->
+    <div class="modal fade" id="addMetricModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-thermometer-half me-2"></i>Record Metric</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMetricForm">
+                        <div class="mb-3">
+                            <label class="form-label">Hive *</label>
+                            <select class="form-select" name="Hive_ID" id="metricHiveSelect" required>
+                                <option value="">Select a hive...</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Date *</label>
+                                    <input type="date" class="form-control" name="Date" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Time</label>
+                                    <input type="time" class="form-control" name="Time">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Temperature (°F)</label>
+                                    <input type="number" class="form-control" name="Temperature" step="0.1" placeholder="95.5">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Weight (lbs)</label>
+                                    <input type="number" class="form-control" name="Weight" step="0.1" placeholder="85.2">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Humidity (%)</label>
+                            <input type="number" class="form-control" name="Humidity" min="0" max="100" placeholder="65">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Source</label>
+                            <select class="form-select" name="Source">
+                                <option value="Manual">Manual Reading</option>
+                                <option value="Digital">Digital Sensor</option>
+                                <option value="Estimated">Estimated</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="Notes" rows="2" placeholder="Any additional observations..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-info" onclick="addMetric()">
+                        <i class="fas fa-save me-2"></i>Record Metric
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-tasks me-2"></i>Add Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addTaskForm">
+                        <div class="mb-3">
+                            <label class="form-label">Task Title *</label>
+                            <input type="text" class="form-control" name="Title" placeholder="e.g., Apply varroa treatment" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Hive (optional)</label>
+                            <select class="form-select" name="Hive_ID" id="taskHiveSelect">
+                                <option value="">All hives / General task</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" name="Due_Date">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Priority</label>
+                                    <select class="form-select" name="Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium" selected>Medium</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="Description" rows="3" placeholder="Detailed description of the task..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="addTask()">
+                        <i class="fas fa-save me-2"></i>Add Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
