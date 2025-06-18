@@ -208,6 +208,10 @@ async function loadTasks() {
 
 // Dashboard functions
 function updateDashboard() {
+    // Populate dropdowns when dashboard loads
+    populateApiarySelects();
+    populateHiveSelects();
+    
     const totalHives = hivesData.length;
     const activeHives = hivesData.filter(h => h.Status === 'Active').length;
     const pendingTasks = tasksData.filter(t => t.Status === 'Pending').length;
@@ -257,6 +261,9 @@ function renderHives() {
     }
     
     console.log('Rendering hives:', hivesData.length, 'hives');
+    
+    // Populate apiary selects for hive forms
+    populateApiarySelects();
 
     hivesContainer.innerHTML = hivesData.map(hive => `
         <div class="col-md-4 mb-3">
