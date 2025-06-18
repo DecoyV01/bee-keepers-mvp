@@ -209,10 +209,10 @@ function updateDashboard() {
         recentInspectionsList.innerHTML = recentInspections.map(inspection => `
             <div class="list-group-item">
                 <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">Hive ${inspection.Hive_ID}</h6>
+                    <h6 class="mb-1">Hive ${inspection.Hive_ID} by ${inspection.Inspector}</h6>
                     <small>${formatDate(inspection.Date)}</small>
                 </div>
-                <p class="mb-1">${inspection.Queen_Status || 'N/A'}</p>
+                <p class="mb-1">Queen: ${inspection.Queen_Present || 'Unknown'}, Laying: ${inspection.Queen_Laying || 'Unknown'}</p>
             </div>
         `).join('');
     }
@@ -224,8 +224,8 @@ function updateDashboard() {
         upcomingTasksList.innerHTML = upcomingTasks.map(task => `
             <div class="list-group-item">
                 <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">${task.Task_Name}</h6>
-                    <small class="text-${task.Priority === 'High' ? 'danger' : task.Priority === 'Medium' ? 'warning' : 'success'}">${task.Priority}</small>
+                    <h6 class="mb-1">${task.Title}</h6>
+                    <small class="text-${task.Priority === 'Critical' ? 'dark' : task.Priority === 'High' ? 'danger' : task.Priority === 'Medium' ? 'warning' : 'success'}">${task.Priority}</small>
                 </div>
                 <p class="mb-1">${task.Description || ''}</p>
                 ${task.Due_Date ? `<small>Due: ${formatDate(task.Due_Date)}</small>` : ''}
@@ -249,8 +249,8 @@ function renderHives() {
                     </div>
                     <p class="card-text">
                         <strong>Type:</strong> ${hive.Type}<br>
-                        <strong>Installed:</strong> ${formatDate(hive.Installation_Date)}<br>
-                        <strong>Location:</strong> ${hive.Location || 'N/A'}
+                        <strong>Installed:</strong> ${formatDate(hive.Install_Date)}<br>
+                        <strong>QR Code:</strong> ${hive.QR_Code || 'N/A'}
                     </p>
                     <div class="btn-group" role="group">
                         <button class="btn btn-sm btn-outline-primary" onclick="showAddInspectionModal(${hive.ID})">
@@ -280,14 +280,15 @@ function renderInspections() {
                     </div>
                     <div class="row">
                         <div class="col-6">
-                            <strong>Queen:</strong> ${inspection.Queen_Present ? 'Present' : 'Not Found'}<br>
-                            <strong>Laying:</strong> ${inspection.Queen_Laying ? 'Yes' : 'No'}<br>
+                            <strong>Inspector:</strong> ${inspection.Inspector || 'N/A'}<br>
+                            <strong>Queen Present:</strong> ${inspection.Queen_Present || 'N/A'}<br>
+                            <strong>Queen Laying:</strong> ${inspection.Queen_Laying || 'N/A'}<br>
                             <strong>Brood Pattern:</strong> ${inspection.Brood_Pattern || 'N/A'}
                         </div>
                         <div class="col-6">
                             <strong>Honey Stores:</strong> ${inspection.Honey_Stores || 'N/A'}<br>
                             <strong>Weather:</strong> ${inspection.Weather || 'N/A'}<br>
-                            <strong>Temperature:</strong> ${inspection.Temperature ? inspection.Temperature + '°F' : 'N/A'}
+                            <strong>Duration:</strong> ${inspection.Duration ? inspection.Duration + ' min' : 'N/A'}
                         </div>
                     </div>
                     ${inspection.Notes ? `<div class="mt-2"><strong>Notes:</strong> ${inspection.Notes}</div>` : ''}
@@ -354,13 +355,14 @@ function renderTasks() {
     const groupedTasks = {
         'High': tasksData.filter(t => t.Priority === 'High'),
         'Medium': tasksData.filter(t => t.Priority === 'Medium'),
-        'Low': tasksData.filter(t => t.Priority === 'Low')
+        'Low': tasksData.filter(t => t.Priority === 'Low'),
+        'Critical': tasksData.filter(t => t.Priority === 'Critical')
     };
 
     tasksContainer.innerHTML = Object.keys(groupedTasks).map(priority => `
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="card">
-                <div class="card-header bg-${priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'success'} text-white">
+                <div class="card-header bg-${priority === 'Critical' ? 'dark' : priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'success'} text-white">
                     <h6 class="mb-0">${priority} Priority (${groupedTasks[priority].length})</h6>
                 </div>
                 <div class="card-body p-0">
@@ -368,8 +370,8 @@ function renderTasks() {
                         ${groupedTasks[priority].map(task => `
                             <div class="list-group-item">
                                 <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">${task.Task_Name}</h6>
-                                    <span class="badge bg-${task.Status === 'Completed' ? 'success' : 'warning'}">${task.Status}</span>
+                                    <h6 class="mb-1">${task.Title}</h6>
+                                    <span class="badge bg-${task.Status === 'Completed' ? 'success' : task.Status === 'In Progress' ? 'info' : 'warning'}">${task.Status}</span>
                                 </div>
                                 <p class="mb-1">${task.Description || ''}</p>
                                 ${task.Due_Date ? `<small>Due: ${formatDate(task.Due_Date)}</small>` : ''}
