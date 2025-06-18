@@ -1,5 +1,5 @@
 // Test setup file for BEE Keepers MVP
-import 'jest-environment-jsdom';
+// Using CommonJS syntax for Jest compatibility
 
 // Mock console methods to avoid noise in tests
 global.console = {
