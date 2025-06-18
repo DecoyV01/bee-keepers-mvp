@@ -2,7 +2,7 @@
 // Complete JavaScript functionality for beekeeping management system
 
 // Google Apps Script API URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2JdlKtHlXS2SKJjBC49PhaVPxiyMEs1e0hDzfy5VYLPD34h4XC1452fiqd0dWaH6n/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_r-9PZ2zpfS-SCr1E61GeCk-qTpuSnZz_4c3VYjKao_F3OiIotb1WaRGO8dC58b7j/exec';
 
 // Global data storage
 let hivesData = [];
