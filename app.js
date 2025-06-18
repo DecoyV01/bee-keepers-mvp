@@ -525,9 +525,7 @@ async function addInspection() {
     const formData = new FormData(form);
     const inspectionData = Object.fromEntries(formData.entries());
     
-    // Convert checkboxes to boolean
-    inspectionData.Queen_Present = form.querySelector('input[name="Queen_Present"]').checked;
-    inspectionData.Queen_Laying = form.querySelector('input[name="Queen_Laying"]').checked;
+    // Queen_Present and Queen_Laying are already select values, no conversion needed
     
     if (!inspectionData.Hive_ID) {
         showAlert('Please select a hive', 'warning');
