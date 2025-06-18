@@ -10,6 +10,34 @@ let inspectionsData = [];
 let metricsData = [];
 let tasksData = [];
 
+// Demo mode flag
+let demoMode = false;
+
+// Sample data for demo mode
+const sampleData = {
+    hives: [
+        { ID: 1, Name: "Queen's Palace", Type: "Langstroth", Status: "Active", Installation_Date: "2024-03-15", Location: "North Garden" },
+        { ID: 2, Name: "Honey Haven", Type: "Top Bar", Status: "Active", Installation_Date: "2024-04-01", Location: "South Field" },
+        { ID: 3, Name: "Worker's Paradise", Type: "Langstroth", Status: "Inactive", Installation_Date: "2024-02-10", Location: "East Meadow" }
+    ],
+    inspections: [
+        { ID: 1, Hive_ID: 1, Date: "2024-06-15", Queen_Present: true, Queen_Laying: true, Brood_Pattern: "Good", Honey_Stores: "Full", Weather: "Sunny", Temperature: 72, Notes: "Strong colony, excellent brood pattern" },
+        { ID: 2, Hive_ID: 2, Date: "2024-06-14", Queen_Present: true, Queen_Laying: true, Brood_Pattern: "Fair", Honey_Stores: "Medium", Weather: "Cloudy", Temperature: 68, Notes: "Good activity, building up stores" },
+        { ID: 3, Hive_ID: 1, Date: "2024-06-10", Queen_Present: true, Queen_Laying: false, Brood_Pattern: "Poor", Honey_Stores: "Low", Weather: "Rainy", Temperature: 65, Notes: "May need feeding" }
+    ],
+    metrics: [
+        { ID: 1, Hive_ID: 1, Date: "2024-06-15", Temperature: 95, Weight: 85.5, Humidity: 45, Source: "Digital" },
+        { ID: 2, Hive_ID: 1, Date: "2024-06-14", Temperature: 94, Weight: 84.2, Humidity: 48, Source: "Digital" },
+        { ID: 3, Hive_ID: 2, Date: "2024-06-15", Temperature: 92, Weight: 72.1, Humidity: 52, Source: "Manual" },
+        { ID: 4, Hive_ID: 2, Date: "2024-06-14", Temperature: 91, Weight: 71.8, Humidity: 50, Source: "Manual" }
+    ],
+    tasks: [
+        { ID: 1, Task_Name: "Inspect Hive 1", Priority: "High", Status: "Pending", Due_Date: "2024-06-20", Hive_ID: 1, Description: "Weekly inspection due" },
+        { ID: 2, Task_Name: "Add Super to Hive 2", Priority: "Medium", Status: "Pending", Due_Date: "2024-06-25", Hive_ID: 2, Description: "Colony is expanding, needs more space" },
+        { ID: 3, Task_Name: "Order New Equipment", Priority: "Low", Status: "Completed", Due_Date: "2024-06-15", Hive_ID: null, Description: "Ordered frames and foundation" }
+    ]
+};
+
 // DOM Content Loaded Event
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BEE Keepers MVP - Application Starting...');
@@ -21,13 +49,30 @@ async function initializeApp() {
     try {
         showAlert('Connecting to BEE Keepers API...', 'info');
         await loadAllData();
-        showAlert('Connected to BEE Keepers API!', 'success');
+        if (demoMode) {
+            showAlert('Running in Demo Mode with sample data!', 'warning');
+        } else {
+            showAlert('Connected to BEE Keepers API!', 'success');
+        }
         showSection('dashboard');
         updateDashboard();
     } catch (error) {
         console.error('Failed to initialize app:', error);
-        showAlert('Unable to connect to API. Please check your connection.', 'danger');
+        showAlert('Unable to connect to API. Loading demo data...', 'warning');
+        loadDemoData();
+        demoMode = true;
+        showSection('dashboard');
+        updateDashboard();
     }
+}
+
+// Load demo data
+function loadDemoData() {
+    hivesData = sampleData.hives;
+    inspectionsData = sampleData.inspections;
+    metricsData = sampleData.metrics;
+    tasksData = sampleData.tasks;
+    console.log('Demo data loaded');
 }
 
 // Show/Hide sections
@@ -85,25 +130,47 @@ async function loadAllData() {
 
 // API call helper
 async function apiCall(action, sheet, record = null) {
-    const url = action === 'get' ? `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}` : GOOGLE_SCRIPT_URL;
-    
-    const options = {
-        method: action === 'get' ? 'GET' : 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    };
-
-    if (action !== 'get') {
-        options.body = JSON.stringify({
-            action: action,
-            sheet: sheet,
-            record: record
+    if (action === 'get') {
+        // Use JSONP for GET requests to avoid CORS issues
+        return new Promise((resolve, reject) => {
+            const callbackName = 'callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const url = `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}&callback=${callbackName}`;
+            
+            // Create callback function
+            window[callbackName] = function(data) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                resolve(data);
+            };
+            
+            // Create script tag
+            const script = document.createElement('script');
+            script.src = url;
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('JSONP request failed'));
+            };
+            
+            document.head.appendChild(script);
         });
-    }
+    } else {
+        // Use fetch for POST requests
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: action,
+                sheet: sheet,
+                record: record
+            })
+        };
 
-    const response = await fetch(url, options);
-    return await response.json();
+        const response = await fetch(GOOGLE_SCRIPT_URL, options);
+        return await response.json();
+    }
 }
 
 // Load functions
@@ -114,7 +181,10 @@ async function loadHives() {
         console.log('Loaded hives:', hivesData.length);
     } catch (error) {
         console.error('Error loading hives:', error);
-        hivesData = [];
+        if (!demoMode) {
+            hivesData = sampleData.hives;
+            demoMode = true;
+        }
     }
 }
 
@@ -125,7 +195,10 @@ async function loadInspections() {
         console.log('Loaded inspections:', inspectionsData.length);
     } catch (error) {
         console.error('Error loading inspections:', error);
-        inspectionsData = [];
+        if (!demoMode) {
+            inspectionsData = sampleData.inspections;
+            demoMode = true;
+        }
     }
 }
 
@@ -136,7 +209,10 @@ async function loadMetrics() {
         console.log('Loaded metrics:', metricsData.length);
     } catch (error) {
         console.error('Error loading metrics:', error);
-        metricsData = [];
+        if (!demoMode) {
+            metricsData = sampleData.metrics;
+            demoMode = true;
+        }
     }
 }
 
@@ -147,7 +223,10 @@ async function loadTasks() {
         console.log('Loaded tasks:', tasksData.length);
     } catch (error) {
         console.error('Error loading tasks:', error);
-        tasksData = [];
+        if (!demoMode) {
+            tasksData = sampleData.tasks;
+            demoMode = true;
+        }
     }
 }
 
@@ -386,6 +465,24 @@ async function addHive() {
     const form = document.getElementById('addHiveForm');
     const formData = new FormData(form);
     const hiveData = Object.fromEntries(formData.entries());
+    
+    if (demoMode) {
+        // Demo mode: add locally
+        const newHive = {
+            ID: hivesData.length + 1,
+            ...hiveData,
+            Installation_Date: hiveData.Installation_Date || new Date().toISOString().split('T')[0]
+        };
+        hivesData.push(newHive);
+        showAlert('Hive added successfully! (Demo Mode)', 'success');
+        form.reset();
+        bootstrap.Modal.getInstance(document.getElementById('addHiveModal')).hide();
+        updateDashboard();
+        if (!document.getElementById('hives').classList.contains('d-none')) {
+            renderHives();
+        }
+        return;
+    }
     
     try {
         const result = await apiCall('add', 'Hives', hiveData);
