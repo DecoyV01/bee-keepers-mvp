@@ -304,32 +304,40 @@ function renderInspections() {
     // Populate hive selects for inspection forms
     populateHiveSelects();
 
-    inspectionsContainer.innerHTML = inspectionsData.map(inspection => `
-        <div class="col-md-6 mb-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <h5 class="card-title">Hive ${inspection.Hive_ID}</h5>
-                        <small class="text-muted">${formatDate(inspection.Date)}</small>
-                    </div>
-                    <div class="row">
-                        <div class="col-6">
-                            <strong>Inspector:</strong> ${inspection.Inspector || 'N/A'}<br>
-                            <strong>Queen Present:</strong> ${inspection.Queen_Present || 'N/A'}<br>
-                            <strong>Queen Laying:</strong> ${inspection.Queen_Laying || 'N/A'}<br>
-                            <strong>Brood Pattern:</strong> ${inspection.Brood_Pattern || 'N/A'}
-                        </div>
-                        <div class="col-6">
-                            <strong>Honey Stores:</strong> ${inspection.Honey_Stores || 'N/A'}<br>
-                            <strong>Weather:</strong> ${inspection.Weather || 'N/A'}<br>
-                            <strong>Duration:</strong> ${inspection.Duration ? inspection.Duration + ' min' : 'N/A'}
-                        </div>
-                    </div>
-                    ${inspection.Notes ? `<div class="mt-2"><strong>Notes:</strong> ${inspection.Notes}</div>` : ''}
-                </div>
-            </div>
-        </div>
-    `).join('');
+    if (inspectionsData.length === 0) {
+        inspectionsContainer.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="fas fa-info-circle me-2"></i>No inspections recorded yet.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    inspectionsContainer.innerHTML = inspectionsData.map(inspection => {
+        const hiveName = hivesData.find(h => h.ID == inspection.Hive_ID)?.Name || `Hive ${inspection.Hive_ID}`;
+        const queenStatus = `${inspection.Queen_Present || 'N/A'} / ${inspection.Queen_Laying || 'N/A'}`;
+        
+        return `
+            <tr>
+                <td>${formatDate(inspection.Date)}</td>
+                <td>${hiveName}</td>
+                <td>${inspection.Inspector || 'N/A'}</td>
+                <td>${inspection.Duration ? inspection.Duration + ' min' : 'N/A'}</td>
+                <td>${queenStatus}</td>
+                <td>${inspection.Brood_Pattern || 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary me-1" onclick="viewInspectionDetails(${inspection.ID})" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="showAddInspectionModal(${inspection.Hive_ID})" title="New Inspection">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderMetrics() {
@@ -388,6 +396,26 @@ function renderMetrics() {
         const firstHiveId = Object.keys(metricsByHive)[0];
         createMetricsChart(metricsByHive[firstHiveId]);
     }
+}
+
+// View inspection details (placeholder function)
+function viewInspectionDetails(inspectionId) {
+    const inspection = inspectionsData.find(i => i.ID == inspectionId);
+    if (!inspection) return;
+    
+    const hiveName = hivesData.find(h => h.ID == inspection.Hive_ID)?.Name || `Hive ${inspection.Hive_ID}`;
+    
+    showAlert(`
+        <strong>${hiveName} - ${formatDate(inspection.Date)}</strong><br>
+        Inspector: ${inspection.Inspector || 'N/A'}<br>
+        Duration: ${inspection.Duration ? inspection.Duration + ' min' : 'N/A'}<br>
+        Queen Present: ${inspection.Queen_Present || 'N/A'}<br>
+        Queen Laying: ${inspection.Queen_Laying || 'N/A'}<br>
+        Brood Pattern: ${inspection.Brood_Pattern || 'N/A'}<br>
+        Honey Stores: ${inspection.Honey_Stores || 'N/A'}<br>
+        Weather: ${inspection.Weather || 'N/A'}<br>
+        ${inspection.Notes ? `<br><strong>Notes:</strong> ${inspection.Notes}` : ''}
+    `, 'info');
 }
 
 // Load metrics for a specific hive (called by dropdown onchange)
