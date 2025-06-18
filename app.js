@@ -650,7 +650,15 @@ function populateHiveSelects() {
     console.log('Found', selects.length, 'hive select elements');
     
     selects.forEach(select => {
-        const defaultText = select.id === 'metricHiveSelect' ? 'Select a hive...' : 'Select Hive (Optional)';
+        let defaultText = 'Select a hive...'; // Default for required fields
+        
+        // Determine appropriate text based on select ID/context
+        if (select.id === 'taskHiveSelect') {
+            defaultText = 'All hives / General task';
+        } else if (select.id === 'metricHiveSelect' || select.id === 'inspectionHiveSelect') {
+            defaultText = 'Select a hive...';
+        }
+        
         select.innerHTML = `<option value="">${defaultText}</option>` +
             hivesData.map(hive => `<option value="${hive.ID}">Hive ${hive.ID} - ${hive.Name}</option>`).join('');
         console.log('Populated hive select with options:', select.innerHTML);
