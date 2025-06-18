@@ -167,3 +167,6 @@ The system includes comprehensive testing capabilities:
 - Frontend test deployment page
 - Complete CRUD operation testing
 - Real-time data sync verification
+
+## Key Memories
+- Under no circumstances are you allowed to use fallback / mock data unless instructed explicitly.

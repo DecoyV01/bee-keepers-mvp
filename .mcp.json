@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref",
+        "xzwsmladddtdgsrkiwlg"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_d8f85165db48b426b53638af5f57a2887ebe3054"
+      }
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/mnt/c/projects/vrp-system/V3"
+      ],
+      "env": {}
+    },
+    "git": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git"
+      ],
+      "env": {
+        "GIT_REPOSITORY_PATH": "/mnt/c/projects/vrp-system/V3"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"]
+    }
+  }
+}
