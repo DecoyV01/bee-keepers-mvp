@@ -293,6 +293,9 @@ function renderInspections() {
     }
     
     console.log('Rendering inspections:', inspectionsData.length, 'inspections');
+    
+    // Populate hive selects for inspection forms
+    populateHiveSelects();
 
     inspectionsContainer.innerHTML = inspectionsData.map(inspection => `
         <div class="col-md-6 mb-3">
@@ -330,6 +333,9 @@ function renderMetrics() {
     }
     
     console.log('Rendering metrics:', metricsData.length, 'metrics');
+    
+    // Populate hive selects for metric forms
+    populateHiveSelects();
 
     // Group metrics by hive
     const metricsByHive = {};
@@ -379,6 +385,9 @@ function renderMetrics() {
 
 function renderTasks() {
     console.log('Rendering tasks:', tasksData.length, 'tasks');
+    
+    // Populate hive selects for task forms
+    populateHiveSelects();
 
     const groupedTasks = {
         'High': tasksData.filter(t => t.Priority === 'High'),
@@ -473,10 +482,15 @@ function showAddTaskModal() {
 
 // Populate hive selects
 function populateHiveSelects() {
+    console.log('Populating hive selects with', hivesData.length, 'hives');
     const selects = document.querySelectorAll('select[name="Hive_ID"]');
+    console.log('Found', selects.length, 'hive select elements');
+    
     selects.forEach(select => {
-        select.innerHTML = '<option value="">Select Hive (Optional)</option>' +
+        const defaultText = select.id === 'metricHiveSelect' ? 'Select a hive...' : 'Select Hive (Optional)';
+        select.innerHTML = `<option value="">${defaultText}</option>` +
             hivesData.map(hive => `<option value="${hive.ID}">Hive ${hive.ID} - ${hive.Name}</option>`).join('');
+        console.log('Populated hive select with options:', select.innerHTML);
     });
 }
 
