@@ -11,6 +11,9 @@ let inspectionsData = [];
 let metricsData = [];
 let tasksData = [];
 
+// Chart instances
+let temperatureChart = null;
+
 // DOM Content Loaded Event
 document.addEventListener('DOMContentLoaded', function() {
     console.log('BEE Keepers MVP - Application Starting...');
@@ -801,6 +804,13 @@ function createMetricsChart(metrics) {
         return;
     }
     
+    // Destroy existing chart if it exists
+    if (temperatureChart) {
+        console.log('Destroying existing chart');
+        temperatureChart.destroy();
+        temperatureChart = null;
+    }
+    
     const last7Days = metrics.slice(-7);
     const labels = last7Days.map(m => formatDate(m.Date));
     const temperatures = last7Days.map(m => parseFloat(m.Temperature) || 0);
@@ -809,7 +819,7 @@ function createMetricsChart(metrics) {
     
     console.log('Creating chart with data:', { labels, temperatures, weights, humidity });
     
-    new Chart(ctx, {
+    temperatureChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
