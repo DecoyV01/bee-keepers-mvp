@@ -383,6 +383,67 @@ function renderMetrics() {
     }
 }
 
+// Load metrics for a specific hive (called by dropdown onchange)
+function loadMetricsForHive() {
+    const hiveSelect = document.getElementById('metricsHiveSelect');
+    const selectedHiveId = hiveSelect.value;
+    
+    console.log('Loading metrics for hive:', selectedHiveId);
+    
+    if (!selectedHiveId) {
+        // No hive selected, show all metrics
+        renderMetrics();
+        return;
+    }
+    
+    // Filter metrics for the selected hive
+    const hiveMetrics = metricsData.filter(metric => metric.Hive_ID == selectedHiveId);
+    console.log('Found', hiveMetrics.length, 'metrics for hive', selectedHiveId);
+    
+    const metricsContainer = document.getElementById('latestMetrics');
+    if (!metricsContainer) return;
+    
+    if (hiveMetrics.length === 0) {
+        metricsContainer.innerHTML = '<p class="text-muted">No metrics recorded for this hive yet.</p>';
+        return;
+    }
+    
+    // Show metrics for the selected hive
+    const latestMetric = hiveMetrics[hiveMetrics.length - 1];
+    const hiveName = hivesData.find(h => h.ID == selectedHiveId)?.Name || `Hive ${selectedHiveId}`;
+    
+    metricsContainer.innerHTML = `
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">${hiveName}</h5>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="metric-value">${latestMetric.Temperature ? latestMetric.Temperature + '°C' : 'N/A'}</div>
+                        <div class="metric-label">Temperature</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-value">${latestMetric.Weight ? latestMetric.Weight + ' kg' : 'N/A'}</div>
+                        <div class="metric-label">Weight</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="metric-value">${latestMetric.Humidity ? latestMetric.Humidity + '%' : 'N/A'}</div>
+                        <div class="metric-label">Humidity</div>
+                    </div>
+                </div>
+                <small class="text-muted">Last updated: ${formatDate(latestMetric.Date)}</small>
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-primary" onclick="showAddMetricModal(${selectedHiveId})">
+                        <i class="fas fa-plus me-1"></i>Add Metric
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Create chart for this hive
+    createMetricsChart(hiveMetrics);
+}
+
 function renderTasks() {
     console.log('Rendering tasks:', tasksData.length, 'tasks');
     
@@ -492,6 +553,14 @@ function populateHiveSelects() {
             hivesData.map(hive => `<option value="${hive.ID}">Hive ${hive.ID} - ${hive.Name}</option>`).join('');
         console.log('Populated hive select with options:', select.innerHTML);
     });
+    
+    // Also populate the metrics filter dropdown
+    const metricsHiveSelect = document.getElementById('metricsHiveSelect');
+    if (metricsHiveSelect) {
+        console.log('Populating metrics hive filter dropdown');
+        metricsHiveSelect.innerHTML = '<option value="">Select a hive...</option>' +
+            hivesData.map(hive => `<option value="${hive.ID}">Hive ${hive.ID} - ${hive.Name}</option>`).join('');
+    }
 }
 
 // Populate apiary selects
