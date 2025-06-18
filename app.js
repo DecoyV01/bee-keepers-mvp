@@ -291,6 +291,9 @@ function renderHives() {
                         <button class="btn btn-sm btn-outline-success" onclick="showAddMetricModal(${hive.ID})">
                             <i class="fas fa-thermometer-half me-1"></i>Metrics
                         </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="showEditHiveModal(${hive.ID})">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
                     </div>
                 </div>
             </div>
@@ -582,6 +585,34 @@ function showAddTaskModal() {
     modal.show();
 }
 
+function showEditHiveModal(hiveId) {
+    const hive = hivesData.find(h => h.ID == hiveId);
+    if (!hive) {
+        showAlert('Hive not found!', 'danger');
+        return;
+    }
+    
+    console.log('Opening Edit Hive modal for:', hive);
+    
+    // Populate form with current hive data
+    document.getElementById('editHiveId').value = hive.ID;
+    document.getElementById('editHiveName').value = hive.Name || '';
+    document.getElementById('editHiveType').value = hive.Type || 'Langstroth';
+    document.getElementById('editHiveInstallDate').value = hive.Install_Date ? hive.Install_Date.split(' ')[0] : '';
+    document.getElementById('editHiveStatus').value = hive.Status || 'Active';
+    document.getElementById('editHiveQRCode').value = hive.QR_Code || '';
+    document.getElementById('editHiveNotes').value = hive.Notes || '';
+    
+    // Populate apiary dropdown and set current value
+    populateEditApiarySelects();
+    setTimeout(() => {
+        document.getElementById('editHiveApiarySelect').value = hive.Apiary_ID || '';
+    }, 100);
+    
+    const modal = new bootstrap.Modal(document.getElementById('editHiveModal'));
+    modal.show();
+}
+
 // Populate hive selects
 function populateHiveSelects() {
     console.log('Populating hive selects with', hivesData.length, 'hives');
@@ -615,6 +646,16 @@ function populateApiarySelects() {
             apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
         console.log('Populated select with options:', select.innerHTML);
     });
+}
+
+// Populate apiary select for edit form specifically
+function populateEditApiarySelects() {
+    console.log('Populating edit apiary select with', apiariesData.length, 'apiaries');
+    const select = document.getElementById('editHiveApiarySelect');
+    if (select) {
+        select.innerHTML = '<option value="">Select an apiary...</option>' +
+            apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
+    }
 }
 
 // Add functions
@@ -741,6 +782,69 @@ async function addTask() {
     } catch (error) {
         console.error('Error adding task:', error);
         showAlert('Error adding task. Please try again.', 'danger');
+    }
+}
+
+// Update hive function
+async function updateHive() {
+    const form = document.getElementById('editHiveForm');
+    const formData = new FormData(form);
+    const hiveData = Object.fromEntries(formData.entries());
+    
+    if (!hiveData.Name) {
+        showAlert('Please enter a hive name', 'warning');
+        return;
+    }
+    
+    if (!hiveData.Apiary_ID) {
+        showAlert('Please select an apiary', 'warning');
+        return;
+    }
+    
+    try {
+        const result = await apiCall('update', 'Hives', hiveData);
+        if (result.success) {
+            showAlert('Hive updated successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('editHiveModal')).hide();
+            await loadHives();
+            updateDashboard();
+            if (!document.getElementById('hives').classList.contains('d-none')) {
+                renderHives();
+            }
+        } else {
+            showAlert('Error updating hive: ' + result.error.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating hive:', error);
+        showAlert('Error updating hive. Please try again.', 'danger');
+    }
+}
+
+// Delete hive function
+async function deleteHive() {
+    const hiveId = document.getElementById('editHiveId').value;
+    const hiveName = document.getElementById('editHiveName').value;
+    
+    if (!confirm(`Are you sure you want to delete "${hiveName}"? This action cannot be undone and will also delete all related inspections, metrics, and tasks.`)) {
+        return;
+    }
+    
+    try {
+        const result = await apiCall('delete', 'Hives', { ID: hiveId });
+        if (result.success) {
+            showAlert('Hive deleted successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('editHiveModal')).hide();
+            await loadHives();
+            updateDashboard();
+            if (!document.getElementById('hives').classList.contains('d-none')) {
+                renderHives();
+            }
+        } else {
+            showAlert('Error deleting hive: ' + result.error.message, 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting hive:', error);
+        showAlert('Error deleting hive. Please try again.', 'danger');
     }
 }
 
