@@ -31,6 +31,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('apiaries')" data-section="apiaries">
+                            <i class="fas fa-map-marker-alt me-1"></i>Apiaries
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#" onclick="showSection('hives')" data-section="hives">
                             <i class="fas fa-archive me-1"></i>Hives
                         </a>
@@ -164,6 +169,42 @@
                                 <i class="fas fa-spinner fa-spin"></i> Loading tasks...
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apiaries Section -->
+        <div id="apiaries" class="section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-map-marker-alt me-2"></i>My Apiaries</h2>
+                <button class="btn btn-primary" onclick="showAddApiaryModal()">
+                    <i class="fas fa-plus me-2"></i>Add Apiary
+                </button>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Location</th>
+                                    <th>Coordinates</th>
+                                    <th>Owner Email</th>
+                                    <th>Created</th>
+                                    <th>Hives</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apiariesTable">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-spinner fa-spin"></i> Loading apiaries...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -312,6 +353,7 @@
                 <i class="fas fa-plus"></i>
             </button>
             <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="showAddApiaryModal()"><i class="fas fa-map-marker-alt me-2"></i>Add Apiary</a></li>
                 <li><a class="dropdown-item" href="#" onclick="showAddHiveModal()"><i class="fas fa-archive me-2"></i>Add Hive</a></li>
                 <li><a class="dropdown-item" href="#" onclick="showAddInspectionModal()"><i class="fas fa-search me-2"></i>New Inspection</a></li>
                 <li><a class="dropdown-item" href="#" onclick="showAddMetricModal()"><i class="fas fa-thermometer-half me-2"></i>Record Metric</a></li>
@@ -695,6 +737,114 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-warning" onclick="addTask()">
                         <i class="fas fa-save me-2"></i>Add Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Apiary Modal -->
+    <div class="modal fade" id="addApiaryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-map-marker-alt me-2"></i>Add New Apiary</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addApiaryForm">
+                        <div class="mb-3">
+                            <label class="form-label">Apiary Name *</label>
+                            <input type="text" class="form-control" name="Name" placeholder="e.g., Main Apiary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" name="Location" placeholder="e.g., Rietondale, Pretoria" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">GPS Latitude</label>
+                                    <input type="number" class="form-control" name="GPS_Lat" step="any" placeholder="-25.73216104">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">GPS Longitude</label>
+                                    <input type="number" class="form-control" name="GPS_Lng" step="any" placeholder="28.22284488">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Owner Email</label>
+                            <input type="email" class="form-control" name="Owner_Email" placeholder="beekeeper@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="Notes" rows="3" placeholder="Any additional information about this apiary..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="addApiary()">
+                        <i class="fas fa-save me-2"></i>Add Apiary
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Apiary Modal -->
+    <div class="modal fade" id="editApiaryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Apiary</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editApiaryForm">
+                        <input type="hidden" name="ID" id="editApiaryId">
+                        <div class="mb-3">
+                            <label class="form-label">Apiary Name *</label>
+                            <input type="text" class="form-control" name="Name" id="editApiaryName" placeholder="e.g., Main Apiary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" name="Location" id="editApiaryLocation" placeholder="e.g., Rietondale, Pretoria" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">GPS Latitude</label>
+                                    <input type="number" class="form-control" name="GPS_Lat" id="editApiaryLat" step="any" placeholder="-25.73216104">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">GPS Longitude</label>
+                                    <input type="number" class="form-control" name="GPS_Lng" id="editApiaryLng" step="any" placeholder="28.22284488">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Owner Email</label>
+                            <input type="email" class="form-control" name="Owner_Email" id="editApiaryEmail" placeholder="beekeeper@email.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="Notes" id="editApiaryNotes" rows="3" placeholder="Any additional information about this apiary..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger me-2" onclick="deleteApiary()">
+                        <i class="fas fa-trash me-2"></i>Delete Apiary
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="updateApiary()">
+                        <i class="fas fa-save me-2"></i>Update Apiary
                     </button>
                 </div>
             </div>

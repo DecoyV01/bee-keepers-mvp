@@ -105,7 +105,7 @@ async function initializeApp() {
 // Show/Hide sections
 function showSection(sectionName) {
     // Hide all sections
-    const sections = ['dashboard', 'hives', 'inspections', 'metrics', 'tasks'];
+    const sections = ['dashboard', 'apiaries', 'hives', 'inspections', 'metrics', 'tasks'];
     sections.forEach(section => {
         const element = document.getElementById(section);
         if (element) {
@@ -129,6 +129,9 @@ function showSection(sectionName) {
     switch(sectionName) {
         case 'dashboard':
             updateDashboard();
+            break;
+        case 'apiaries':
+            renderApiaries();
             break;
         case 'hives':
             renderHives();
@@ -404,6 +407,72 @@ function updateDashboard() {
 }
 
 // Render functions
+function renderApiaries() {
+    const apiariesContainer = document.getElementById('apiariesTable');
+    if (!apiariesContainer) {
+        console.log('No apiariesTable element found');
+        return;
+    }
+    
+    console.log('Rendering apiaries:', apiariesData.length, 'apiaries');
+    
+    if (apiariesData.length === 0) {
+        apiariesContainer.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <div class="text-muted">
+                        <i class="fas fa-map-marker-alt fa-2x mb-3"></i>
+                        <p>No apiaries found. <a href="#" onclick="showAddApiaryModal()">Add your first apiary</a> to get started.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const tableHTML = apiariesData.map(apiary => {
+        const hiveCount = hivesData.filter(h => h.Apiary_ID == apiary.ID).length;
+        const coordinates = (apiary.GPS_Lat && apiary.GPS_Lng) ? 
+            `${parseFloat(apiary.GPS_Lat).toFixed(4)}, ${parseFloat(apiary.GPS_Lng).toFixed(4)}` : 
+            'Not set';
+        
+        return `
+            <tr>
+                <td>
+                    <strong>${apiary.Name}</strong>
+                    ${apiary.Notes ? `<br><small class="text-muted">${apiary.Notes}</small>` : ''}
+                </td>
+                <td>${apiary.Location}</td>
+                <td>
+                    ${coordinates !== 'Not set' ? 
+                        `<a href="https://maps.google.com/?q=${apiary.GPS_Lat},${apiary.GPS_Lng}" target="_blank" title="View on Google Maps">
+                            <i class="fas fa-map-marker-alt me-1"></i>${coordinates}
+                        </a>` : 
+                        '<span class="text-muted">Not set</span>'
+                    }
+                </td>
+                <td>${apiary.Owner_Email || '<span class="text-muted">Not set</span>'}</td>
+                <td>${formatDate(apiary.Created_Date)}</td>
+                <td>
+                    <span class="badge bg-primary">${hiveCount} hive${hiveCount !== 1 ? 's' : ''}</span>
+                </td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-sm btn-outline-warning" onclick="showEditApiaryModal(${apiary.ID})" title="Edit apiary">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showSection('hives')" title="View hives">
+                            <i class="fas fa-archive"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    apiariesContainer.innerHTML = tableHTML;
+}
+
 function renderHives() {
     const hivesContainer = document.getElementById('hivesGrid');
     if (!hivesContainer) {
@@ -1228,4 +1297,170 @@ function createMetricsChart(metrics) {
             }
         }
     });
+}
+
+// Apiary Management Functions
+
+// Show Add Apiary Modal
+function showAddApiaryModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addApiaryModal'));
+    
+    // Set current date for Created_Date
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Clear form
+    document.getElementById('addApiaryForm').reset();
+    
+    modal.show();
+}
+
+// Add new apiary
+async function addApiary() {
+    const form = document.getElementById('addApiaryForm');
+    const formData = new FormData(form);
+    
+    // Add Created_Date
+    formData.set('Created_Date', new Date().toISOString().split('T')[0]);
+    
+    const apiaryData = Object.fromEntries(formData.entries());
+    
+    // Validate required fields
+    if (!apiaryData.Name || !apiaryData.Location) {
+        showAlert('Please fill in all required fields (Name and Location).', 'danger');
+        return;
+    }
+    
+    try {
+        console.log('Adding apiary with data:', apiaryData);
+        const result = await apiCall('add', 'Apiaries', apiaryData);
+        console.log('Add apiary result:', result);
+        
+        if (result.success) {
+            showAlert('Apiary added successfully!', 'success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addApiaryModal'));
+            modal.hide();
+            
+            // Reload data and refresh display
+            await loadApiaries();
+            renderApiaries();
+            
+            // Update dropdowns
+            populateApiarySelects();
+        } else {
+            showAlert('Failed to add apiary. Please try again.', 'danger');
+        }
+    } catch (error) {
+        console.error('Error adding apiary:', error);
+        showAlert('Error adding apiary: ' + error.message, 'danger');
+    }
+}
+
+// Show Edit Apiary Modal
+function showEditApiaryModal(apiaryId) {
+    const apiary = apiariesData.find(a => a.ID == apiaryId);
+    if (!apiary) {
+        showAlert('Apiary not found!', 'danger');
+        return;
+    }
+    
+    // Populate form fields
+    document.getElementById('editApiaryId').value = apiary.ID;
+    document.getElementById('editApiaryName').value = apiary.Name || '';
+    document.getElementById('editApiaryLocation').value = apiary.Location || '';
+    document.getElementById('editApiaryLat').value = apiary.GPS_Lat || '';
+    document.getElementById('editApiaryLng').value = apiary.GPS_Lng || '';
+    document.getElementById('editApiaryEmail').value = apiary.Owner_Email || '';
+    document.getElementById('editApiaryNotes').value = apiary.Notes || '';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('editApiaryModal'));
+    modal.show();
+}
+
+// Update apiary
+async function updateApiary() {
+    const form = document.getElementById('editApiaryForm');
+    const formData = new FormData(form);
+    const apiaryData = Object.fromEntries(formData.entries());
+    
+    // Validate required fields
+    if (!apiaryData.Name || !apiaryData.Location) {
+        showAlert('Please fill in all required fields (Name and Location).', 'danger');
+        return;
+    }
+    
+    try {
+        console.log('Updating apiary with data:', apiaryData);
+        const result = await apiCall('add', 'Apiaries', apiaryData);
+        console.log('Update apiary result:', result);
+        
+        if (result.success) {
+            showAlert('Apiary updated successfully!', 'success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editApiaryModal'));
+            modal.hide();
+            
+            // Reload data and refresh display
+            await loadApiaries();
+            renderApiaries();
+            
+            // Update dropdowns
+            populateApiarySelects();
+        } else {
+            showAlert('Failed to update apiary. Please try again.', 'danger');
+        }
+    } catch (error) {
+        console.error('Error updating apiary:', error);
+        showAlert('Error updating apiary: ' + error.message, 'danger');
+    }
+}
+
+// Delete apiary
+async function deleteApiary() {
+    const apiaryId = document.getElementById('editApiaryId').value;
+    const apiary = apiariesData.find(a => a.ID == apiaryId);
+    
+    if (!apiary) {
+        showAlert('Apiary not found!', 'danger');
+        return;
+    }
+    
+    // Check if apiary has hives
+    const associatedHives = hivesData.filter(h => h.Apiary_ID == apiaryId);
+    if (associatedHives.length > 0) {
+        showAlert(`Cannot delete apiary "${apiary.Name}" because it contains ${associatedHives.length} hive(s). Please move or delete the hives first.`, 'danger');
+        return;
+    }
+    
+    const confirmDelete = confirm(`Are you sure you want to delete the apiary "${apiary.Name}"? This action cannot be undone.`);
+    if (!confirmDelete) return;
+    
+    try {
+        console.log('Deleting apiary:', apiaryId);
+        const result = await apiCall('delete', 'Apiaries', { ID: apiaryId });
+        console.log('Delete apiary result:', result);
+        
+        if (result.success) {
+            showAlert('Apiary deleted successfully!', 'success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editApiaryModal'));
+            modal.hide();
+            
+            // Reload data and refresh display
+            await loadApiaries();
+            renderApiaries();
+            
+            // Update dropdowns
+            populateApiarySelects();
+        } else {
+            showAlert('Failed to delete apiary. Please try again.', 'danger');
+        }
+    } catch (error) {
+        console.error('Error deleting apiary:', error);
+        showAlert('Error deleting apiary: ' + error.message, 'danger');
+    }
 }
