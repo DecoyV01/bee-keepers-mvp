@@ -339,6 +339,8 @@ function renderInspections() {
     }
     
     console.log('Rendering inspections:', inspectionsData.length, 'inspections');
+    console.log('Inspections container element:', inspectionsContainer);
+    console.log('Container parent:', inspectionsContainer.parentElement);
     
     // Populate hive selects for inspection forms
     populateHiveSelects();
@@ -354,7 +356,7 @@ function renderInspections() {
         return;
     }
 
-    inspectionsContainer.innerHTML = inspectionsData.map(inspection => {
+    const tableHTML = inspectionsData.map(inspection => {
         const hiveName = hivesData.find(h => h.ID == inspection.Hive_ID)?.Name || `Hive ${inspection.Hive_ID}`;
         const queenStatus = `${inspection.Queen_Present || 'N/A'} / ${inspection.Queen_Laying || 'N/A'}`;
         
@@ -377,6 +379,10 @@ function renderInspections() {
             </tr>
         `;
     }).join('');
+    
+    console.log('Generated table HTML:', tableHTML);
+    inspectionsContainer.innerHTML = tableHTML;
+    console.log('INSPECTION TABLE FIXED - VERSION 1.2.1 - TABLE ROWS APPLIED');
 }
 
 function renderMetrics() {
