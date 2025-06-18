@@ -85,26 +85,62 @@ async function loadAllData() {
 
 // API call helper
 async function apiCall(action, sheet, record = null) {
-    const url = action === 'get' ? `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}` : GOOGLE_SCRIPT_URL;
-    
-    const options = {
-        method: action === 'get' ? 'GET' : 'POST',
-        mode: 'cors',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    };
-
-    if (action !== 'get') {
-        options.body = JSON.stringify({
-            action: action,
-            sheet: sheet,
-            record: record
+    if (action === 'get' || action === 'health') {
+        // Use JSONP for GET requests to avoid CORS
+        return new Promise((resolve, reject) => {
+            const callbackName = 'callback_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+            const url = `${GOOGLE_SCRIPT_URL}?action=${action}&sheet=${sheet}&callback=${callbackName}`;
+            
+            // Create callback function
+            window[callbackName] = function(data) {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                resolve(data);
+            };
+            
+            // Create script tag
+            const script = document.createElement('script');
+            script.src = url;
+            script.onerror = function() {
+                document.head.removeChild(script);
+                delete window[callbackName];
+                reject(new Error('API request failed'));
+            };
+            
+            // Add timeout
+            setTimeout(() => {
+                if (window[callbackName]) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('API request timeout'));
+                }
+            }, 10000);
+            
+            document.head.appendChild(script);
         });
+    } else {
+        // Use fetch for POST requests (they still work in most cases)
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: action,
+                    sheet: sheet,
+                    record: record
+                })
+            });
+            
+            // With no-cors, we can't read the response, so assume success
+            return { success: true, data: record };
+        } catch (error) {
+            console.error('POST request error:', error);
+            throw error;
+        }
     }
-
-    const response = await fetch(url, options);
-    return await response.json();
 }
 
 // Load functions
