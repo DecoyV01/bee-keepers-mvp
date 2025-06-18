@@ -151,9 +151,12 @@ async function apiCall(action, sheet, record = null) {
 // Load functions
 async function loadApiaries() {
     try {
+        console.log('Starting to load apiaries...');
         const result = await apiCall('get', 'Apiaries');
+        console.log('Apiaries API result:', result);
         apiariesData = result.data || [];
         console.log('Loaded apiaries:', apiariesData.length);
+        console.log('Apiaries data:', apiariesData);
     } catch (error) {
         console.error('Error loading apiaries:', error);
         apiariesData = [];
@@ -809,6 +812,17 @@ function createMetricsChart(metrics) {
         console.log('Destroying existing chart');
         temperatureChart.destroy();
         temperatureChart = null;
+    }
+    
+    // Also try to destroy any chart attached to this canvas
+    try {
+        const existingChart = Chart.getChart(ctx);
+        if (existingChart) {
+            console.log('Found existing chart on canvas, destroying it');
+            existingChart.destroy();
+        }
+    } catch (e) {
+        console.log('No existing chart found on canvas');
     }
     
     const last7Days = metrics.slice(-7);
