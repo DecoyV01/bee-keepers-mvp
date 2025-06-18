@@ -5,6 +5,7 @@
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_r-9PZ2zpfS-SCr1E61GeCk-qTpuSnZz_4c3VYjKao_F3OiIotb1WaRGO8dC58b7j/exec';
 
 // Global data storage
+let apiariesData = [];
 let hivesData = [];
 let inspectionsData = [];
 let metricsData = [];
@@ -76,6 +77,7 @@ function showSection(sectionName) {
 // Load all data from API
 async function loadAllData() {
     await Promise.all([
+        loadApiaries(),
         loadHives(),
         loadInspections(),
         loadMetrics(),
@@ -144,6 +146,18 @@ async function apiCall(action, sheet, record = null) {
 }
 
 // Load functions
+async function loadApiaries() {
+    try {
+        const result = await apiCall('get', 'Apiaries');
+        apiariesData = result.data || [];
+        console.log('Loaded apiaries:', apiariesData.length);
+    } catch (error) {
+        console.error('Error loading apiaries:', error);
+        apiariesData = [];
+        throw error;
+    }
+}
+
 async function loadHives() {
     try {
         const result = await apiCall('get', 'Hives');
@@ -428,6 +442,7 @@ function renderTasks() {
 // Modal functions
 function showAddHiveModal() {
     const modal = new bootstrap.Modal(document.getElementById('addHiveModal'));
+    populateApiarySelects();
     modal.show();
 }
 
@@ -464,11 +479,26 @@ function populateHiveSelects() {
     });
 }
 
+// Populate apiary selects
+function populateApiarySelects() {
+    const selects = document.querySelectorAll('select[name="Apiary_ID"]');
+    selects.forEach(select => {
+        select.innerHTML = '<option value="">Select an apiary...</option>' +
+            apiariesData.map(apiary => `<option value="${apiary.ID}">${apiary.Name} - ${apiary.Location || 'No location'}</option>`).join('');
+    });
+}
+
 // Add functions
 async function addHive() {
     const form = document.getElementById('addHiveForm');
     const formData = new FormData(form);
     const hiveData = Object.fromEntries(formData.entries());
+    
+    // Validate that an apiary is selected
+    if (!hiveData.Apiary_ID) {
+        showAlert('Please select an apiary for this hive', 'warning');
+        return;
+    }
     
     try {
         const result = await apiCall('add', 'Hives', hiveData);
