@@ -237,7 +237,12 @@ function updateDashboard() {
 // Render functions
 function renderHives() {
     const hivesContainer = document.getElementById('hivesContainer');
-    if (!hivesContainer) return;
+    if (!hivesContainer) {
+        console.log('No hivesContainer element found');
+        return;
+    }
+    
+    console.log('Rendering hives:', hivesData.length, 'hives');
 
     hivesContainer.innerHTML = hivesData.map(hive => `
         <div class="col-md-4 mb-3">
@@ -322,15 +327,15 @@ function renderMetrics() {
                         <h5 class="card-title">Hive ${hiveId}</h5>
                         <div class="row text-center">
                             <div class="col-4">
-                                <div class="metric-value">${latestMetric.Temperature || 'N/A'}</div>
+                                <div class="metric-value">${latestMetric.Temperature ? latestMetric.Temperature + '°C' : 'N/A'}</div>
                                 <div class="metric-label">Temperature</div>
                             </div>
                             <div class="col-4">
-                                <div class="metric-value">${latestMetric.Weight || 'N/A'}</div>
+                                <div class="metric-value">${latestMetric.Weight ? latestMetric.Weight + ' kg' : 'N/A'}</div>
                                 <div class="metric-label">Weight</div>
                             </div>
                             <div class="col-4">
-                                <div class="metric-value">${latestMetric.Humidity || 'N/A'}</div>
+                                <div class="metric-value">${latestMetric.Humidity ? latestMetric.Humidity + '%' : 'N/A'}</div>
                                 <div class="metric-label">Humidity</div>
                             </div>
                         </div>
@@ -605,7 +610,10 @@ async function syncData() {
 // Create metrics chart
 function createMetricsChart(metrics) {
     const ctx = document.getElementById('metricsChart');
-    if (!ctx) return;
+    if (!ctx) {
+        console.log('No metricsChart element found');
+        return;
+    }
     
     const last7Days = metrics.slice(-7);
     const labels = last7Days.map(m => formatDate(m.Date));
@@ -613,18 +621,20 @@ function createMetricsChart(metrics) {
     const weights = last7Days.map(m => parseFloat(m.Weight) || 0);
     const humidity = last7Days.map(m => parseFloat(m.Humidity) || 0);
     
+    console.log('Creating chart with data:', { labels, temperatures, weights, humidity });
+    
     new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Temperature (°F)',
+                label: 'Temperature (°C)',
                 data: temperatures,
                 borderColor: 'rgb(255, 99, 132)',
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 tension: 0.1
             }, {
-                label: 'Weight (lbs)',
+                label: 'Weight (kg)',
                 data: weights,
                 borderColor: 'rgb(54, 162, 235)',
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
