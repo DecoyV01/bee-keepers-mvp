@@ -236,9 +236,9 @@ function updateDashboard() {
 
 // Render functions
 function renderHives() {
-    const hivesContainer = document.getElementById('hivesContainer');
+    const hivesContainer = document.getElementById('hivesGrid');
     if (!hivesContainer) {
-        console.log('No hivesContainer element found');
+        console.log('No hivesGrid element found');
         return;
     }
     
@@ -272,8 +272,13 @@ function renderHives() {
 }
 
 function renderInspections() {
-    const inspectionsContainer = document.getElementById('inspectionsContainer');
-    if (!inspectionsContainer) return;
+    const inspectionsContainer = document.getElementById('inspectionsTable');
+    if (!inspectionsContainer) {
+        console.log('No inspectionsTable element found');
+        return;
+    }
+    
+    console.log('Rendering inspections:', inspectionsData.length, 'inspections');
 
     inspectionsContainer.innerHTML = inspectionsData.map(inspection => `
         <div class="col-md-6 mb-3">
@@ -304,8 +309,13 @@ function renderInspections() {
 }
 
 function renderMetrics() {
-    const metricsContainer = document.getElementById('metricsContainer');
-    if (!metricsContainer) return;
+    const metricsContainer = document.getElementById('latestMetrics');
+    if (!metricsContainer) {
+        console.log('No latestMetrics element found');
+        return;
+    }
+    
+    console.log('Rendering metrics:', metricsData.length, 'metrics');
 
     // Group metrics by hive
     const metricsByHive = {};
@@ -354,8 +364,7 @@ function renderMetrics() {
 }
 
 function renderTasks() {
-    const tasksContainer = document.getElementById('tasksContainer');
-    if (!tasksContainer) return;
+    console.log('Rendering tasks:', tasksData.length, 'tasks');
 
     const groupedTasks = {
         'High': tasksData.filter(t => t.Priority === 'High'),
@@ -364,30 +373,56 @@ function renderTasks() {
         'Critical': tasksData.filter(t => t.Priority === 'Critical')
     };
 
-    tasksContainer.innerHTML = Object.keys(groupedTasks).map(priority => `
-        <div class="col-md-3 mb-3">
-            <div class="card">
-                <div class="card-header bg-${priority === 'Critical' ? 'dark' : priority === 'High' ? 'danger' : priority === 'Medium' ? 'warning' : 'success'} text-white">
-                    <h6 class="mb-0">${priority} Priority (${groupedTasks[priority].length})</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        ${groupedTasks[priority].map(task => `
-                            <div class="list-group-item">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <h6 class="mb-1">${task.Title}</h6>
-                                    <span class="badge bg-${task.Status === 'Completed' ? 'success' : task.Status === 'In Progress' ? 'info' : 'warning'}">${task.Status}</span>
-                                </div>
-                                <p class="mb-1">${task.Description || ''}</p>
-                                ${task.Due_Date ? `<small>Due: ${formatDate(task.Due_Date)}</small>` : ''}
-                                ${task.Hive_ID ? `<small class="d-block">Hive: ${task.Hive_ID}</small>` : ''}
-                            </div>
-                        `).join('')}
+    // Render high priority tasks
+    const highContainer = document.getElementById('highPriorityTasks');
+    if (highContainer) {
+        highContainer.innerHTML = groupedTasks.High.map(task => `
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <h6 class="mb-1">${task.Title}</h6>
+                    <p class="mb-1 small">${task.Description || ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${task.Due_Date ? formatDate(task.Due_Date) : 'No due date'}</small>
+                        <span class="badge bg-${task.Status === 'Completed' ? 'success' : task.Status === 'In Progress' ? 'info' : 'warning'}">${task.Status}</span>
                     </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `).join('');
+    }
+
+    // Render medium priority tasks
+    const mediumContainer = document.getElementById('mediumPriorityTasks');
+    if (mediumContainer) {
+        mediumContainer.innerHTML = groupedTasks.Medium.map(task => `
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <h6 class="mb-1">${task.Title}</h6>
+                    <p class="mb-1 small">${task.Description || ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${task.Due_Date ? formatDate(task.Due_Date) : 'No due date'}</small>
+                        <span class="badge bg-${task.Status === 'Completed' ? 'success' : task.Status === 'In Progress' ? 'info' : 'warning'}">${task.Status}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Render low priority tasks
+    const lowContainer = document.getElementById('lowPriorityTasks');
+    if (lowContainer) {
+        lowContainer.innerHTML = groupedTasks.Low.map(task => `
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <h6 class="mb-1">${task.Title}</h6>
+                    <p class="mb-1 small">${task.Description || ''}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${task.Due_Date ? formatDate(task.Due_Date) : 'No due date'}</small>
+                        <span class="badge bg-${task.Status === 'Completed' ? 'success' : task.Status === 'In Progress' ? 'info' : 'warning'}">${task.Status}</span>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
 }
 
 // Modal functions
@@ -609,9 +644,9 @@ async function syncData() {
 
 // Create metrics chart
 function createMetricsChart(metrics) {
-    const ctx = document.getElementById('metricsChart');
+    const ctx = document.getElementById('temperatureChart');
     if (!ctx) {
-        console.log('No metricsChart element found');
+        console.log('No temperatureChart element found');
         return;
     }
     
